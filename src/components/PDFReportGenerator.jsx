@@ -32,10 +32,21 @@ export function PDFReportGenerator({ geoState, geoResults, agriState, agriResult
       const sanitizedAddress = (location?.city || 'Site').replace(/[^a-zA-Z0-9]/g, '_');
       const dateStr = new Date().toISOString().slice(0,10);
       const filename = `GeoCrop_AI_Official_Report_${sanitizedAddress}_${dateStr}.pdf`;
-      
+
+      // Try jsPDF save
       pdf.save(filename);
+
+      // Mobile Blob & Print Fallback for Android WebView
+      const blobUrl = pdf.output('bloburl');
+      const newWin = window.open(blobUrl, '_blank');
+      if (!newWin) {
+        // If popup blocked or inside Android WebView, open via location or print
+        window.location.href = blobUrl;
+      }
     } catch (err) {
       console.error('PDF Generation failed:', err);
+      // Native window print fallback for Android OS
+      window.print();
     } finally {
       setIsDownloading(false);
     }
