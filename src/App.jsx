@@ -6,7 +6,7 @@ import { GeotechnicalModule } from './components/GeotechnicalModule';
 import { AgricultureModule } from './components/AgricultureModule';
 import { PDFReportGenerator } from './components/PDFReportGenerator';
 import { AIChatbot } from './components/AIChatbot';
-import { LoginPage } from './components/LoginPage';
+import { AuthModal } from './components/auth/AuthModal';
 import { calculateGeotechnicalProperties, SOIL_TYPES } from './engine/geotechnicalEngine';
 import { calculateAgriculturalPlan } from './engine/agricultureEngine';
 import { Shield } from 'lucide-react';
@@ -125,7 +125,7 @@ function MainApp() {
   }, [agriInputs]);
 
   if (!currentUser) {
-    return <LoginPage onLoginSuccess={(user) => setCurrentUser(user)} />;
+    return <AuthModal onAuthSuccess={(data) => setCurrentUser(data.user || data)} />;
   }
 
   return (
