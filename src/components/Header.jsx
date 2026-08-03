@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Layers, Sprout, FileText, Globe, Sparkles, Building2, Smartphone, Download } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-export function Header({ activeTab, setActiveTab }) {
+export function Header({ activeTab, setActiveTab, currentUser, onLogout }) {
   const { lang, toggleLanguage, t } = useLanguage();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -105,18 +105,21 @@ export function Header({ activeTab, setActiveTab }) {
             </button>
           </div>
 
-          {/* Actions: Install App & Language Toggle */}
+          {/* Actions: Language Toggle & User Logout */}
           <div className="flex items-center gap-2.5">
             
-            {/* Install App Button */}
-            <button
-              onClick={handleInstallClick}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-geo-600 hover:from-emerald-500 hover:to-geo-500 text-white border border-emerald-400/40 shadow-lg shadow-emerald-950 transition-all duration-200"
-              title="Install GeoCrop AI as Native Mobile/Desktop App"
-            >
-              <Smartphone className="w-4 h-4 text-emerald-300 animate-pulse" />
-              <span className="hidden sm:inline">{lang === 'ta' ? 'ஆப் நிறுவுக' : 'Install App'}</span>
-            </button>
+            {/* Logged In User Profile Badge */}
+            {currentUser && (
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold font-mono">
+                  {currentUser.name ? currentUser.name.charAt(0) : 'U'}
+                </div>
+                <div className="text-left leading-tight">
+                  <span className="text-white font-bold block">{currentUser.name}</span>
+                  <span className="text-[9px] text-slate-400 font-mono block">{currentUser.role}</span>
+                </div>
+              </div>
+            )}
 
             {/* Language Toggle Button */}
             <button
@@ -127,6 +130,17 @@ export function Header({ activeTab, setActiveTab }) {
               <Globe className="w-4 h-4 text-geo-400 group-hover:rotate-45 transition-transform" />
               <span>{t('toggleLanguage')}</span>
             </button>
+
+            {/* Logout Button */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-all duration-200"
+                title="Logout from Session"
+              >
+                <span>{lang === 'ta' ? 'வெளியேறு' : 'Logout'}</span>
+              </button>
+            )}
 
           </div>
 

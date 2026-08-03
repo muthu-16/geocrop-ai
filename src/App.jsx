@@ -6,6 +6,7 @@ import { GeotechnicalModule } from './components/GeotechnicalModule';
 import { AgricultureModule } from './components/AgricultureModule';
 import { PDFReportGenerator } from './components/PDFReportGenerator';
 import { AIChatbot } from './components/AIChatbot';
+import { LoginPage } from './components/LoginPage';
 import { calculateGeotechnicalProperties, SOIL_TYPES } from './engine/geotechnicalEngine';
 import { calculateAgriculturalPlan } from './engine/agricultureEngine';
 import { Shield } from 'lucide-react';
@@ -13,6 +14,7 @@ import { Shield } from 'lucide-react';
 function MainApp() {
   const { t, lang } = useLanguage();
   const [activeTab, setActiveTab] = useState('geo');
+  const [currentUser, setCurrentUser] = useState(null); // auth state
 
   // Location State
   const [location, setLocation] = useState({
@@ -122,9 +124,18 @@ function MainApp() {
     });
   }, [agriInputs]);
 
+  if (!currentUser) {
+    return <LoginPage onLoginSuccess={(user) => setCurrentUser(user)} />;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b1118] text-slate-100 selection:bg-geo-500 selection:text-white">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="min-h-screen bg-[#0b1118] text-slate-100 font-sans selection:bg-geo-500 selection:text-white pb-24">
+      <Header
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        currentUser={currentUser}
+        onLogout={() => setCurrentUser(null)}
+      />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <LocationPicker
