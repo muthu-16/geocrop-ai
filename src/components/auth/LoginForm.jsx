@@ -27,24 +27,28 @@ export function LoginForm({ onLoginSuccess, onSwitchToRegister, onSwitchToForgot
           body: JSON.stringify({ identifier, password })
         });
 
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          throw new Error('Non-JSON server response');
-        }
+        const resText = await response.text();
+        const jsonRes = resText ? JSON.parse(resText) : null;
 
-        if (!response.ok || !data.success) {
+        if (response.ok && jsonRes && jsonRes.success) {
+          data = jsonRes;
+        } else if (jsonRes && jsonRes.error) {
           if (response.status === 423) {
             setIsLocked(true);
           }
-          if (data?.requiresOTP) {
-            onRequiresOTP(data);
+          if (jsonRes.requiresOTP) {
+            onRequiresOTP(jsonRes);
             return;
           }
-          throw new Error(data?.error || (isTa ? 'தவறான பயனர்பெயர்/மின்னஞ்சல் அல்லது கடவுச்சொல்.' : 'Invalid username/email or password.'));
+          throw new Error(jsonRes.error);
+        } else {
+          throw new Error('FALLBACK_TRIGGERED');
         }
       } catch (apiErr) {
+        if (apiErr.message !== 'FALLBACK_TRIGGERED' && apiErr.message && !apiErr.message.includes('JSON')) {
+          throw apiErr;
+        }
+
         // Strict Local DB Authentication Check
         const existingUsers = JSON.parse(localStorage.getItem('geocrop_users') || '[]');
         const cleanId = identifier.trim().toLowerCase();

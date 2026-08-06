@@ -42,18 +42,22 @@ export function RegisterForm({ onRegisterSuccess, onSwitchToLogin }) {
           body: JSON.stringify(formData)
         });
 
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          throw new Error('Non-JSON server response');
-        }
+        const resText = await response.text();
+        const jsonRes = resText ? JSON.parse(resText) : null;
 
-        if (!response.ok || !data.success) {
-          throw new Error(data?.error || (isTa ? 'பதிவுத் தோல்வியடைந்தது.' : 'Registration failed.'));
+        if (response.ok && jsonRes && jsonRes.success) {
+          data = jsonRes;
+        } else if (jsonRes && jsonRes.error) {
+          throw new Error(jsonRes.error);
+        } else {
+          throw new Error('FALLBACK_TRIGGERED');
         }
       } catch (apiErr) {
-        // Local DB storage fallback for static/offline/APK deployments
+        if (apiErr.message !== 'FALLBACK_TRIGGERED' && apiErr.message && !apiErr.message.includes('JSON')) {
+          throw apiErr;
+        }
+
+        // Local DB storage fallback
         const existingUsers = JSON.parse(localStorage.getItem('geocrop_users') || '[]');
         const cleanUsername = formData.username.trim().toLowerCase();
         const cleanEmail = formData.email.trim().toLowerCase();
@@ -78,7 +82,6 @@ export function RegisterForm({ onRegisterSuccess, onSwitchToLogin }) {
         existingUsers.push(newUser);
         localStorage.setItem('geocrop_users', JSON.stringify(existingUsers));
 
-        // Console log for production verification without showing on screen
         console.log('🔒 Generated Verification OTP:', generatedOtp);
 
         data = {

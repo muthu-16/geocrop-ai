@@ -61,23 +61,27 @@ export function OTPVerifyForm({ regData, onVerificationSuccess, onSwitchToLogin 
           body: JSON.stringify({ userId: regData?.userId, otp })
         });
 
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          throw new Error('Non-JSON server response');
-        }
+        const resText = await response.text();
+        const jsonRes = resText ? JSON.parse(resText) : null;
 
-        if (!response.ok || !data.success) {
-          throw new Error(data?.error || (isTa ? 'OTP சரிபார்ப்பு தோல்வியடைந்தது.' : 'OTP Verification failed.'));
+        if (response.ok && jsonRes && jsonRes.success) {
+          data = jsonRes;
+        } else if (jsonRes && jsonRes.error) {
+          throw new Error(jsonRes.error);
+        } else {
+          throw new Error('FALLBACK_TRIGGERED');
         }
       } catch (apiErr) {
-        // Local DB verification fallback
+        if (apiErr.message !== 'FALLBACK_TRIGGERED' && apiErr.message && !apiErr.message.includes('JSON')) {
+          throw apiErr;
+        }
+
+        // Local DB verification
         const existingUsers = JSON.parse(localStorage.getItem('geocrop_users') || '[]');
         const userIndex = existingUsers.findIndex(u => u.id === regData?.userId || u.email === regData?.email);
 
         if (userIndex === -1) {
-          throw new Error(isTa ? 'பயனர் கணக்கு பெறப்படவில்லை.' : 'User account not found.');
+          throw new Error(isTa ? 'பயனர் கணக்கு பெறப்படவில்லை. மீண்டும் பதிவு செய்யவும்.' : 'User account not found. Please register again.');
         }
 
         const user = existingUsers[userIndex];
