@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../db/database.js';
 import { config } from '../config/env.js';
+import { sendOTPEmail } from '../utils/emailSender.js';
 
 // Helper: Generate 6-digit numeric OTP
 function generate6DigitOTP() {
@@ -73,12 +74,15 @@ export async function register(req, res) {
       VALUES (?, ?, ?, ?)
     `).run(userId, otpHash, rawOtp, expiresAt);
 
+    // Dispatch real email via Nodemailer
+    const emailResult = await sendOTPEmail(cleanEmail, rawOtp, fullName.trim());
+
     return res.status(201).json({
       success: true,
-      message: 'Registration successful! A 6-digit OTP has been sent.',
+      message: 'Registration successful! A 6-digit OTP code has been sent to your email.',
       userId,
       email: cleanEmail,
-      otpDemoDisplay: rawOtp, // Provided for easy demo testing
+      emailPreviewUrl: emailResult.previewUrl || null,
       expiresInMinutes: config.otpExpiryMinutes
     });
 
@@ -189,10 +193,13 @@ export async function resendOTP(req, res) {
       VALUES (?, ?, ?, ?)
     `).run(userId, otpHash, rawOtp, expiresAt);
 
+    // Dispatch real email via Nodemailer
+    const emailResult = await sendOTPEmail(user.email, rawOtp, user.full_name || 'Engineer');
+
     return res.status(200).json({
       success: true,
-      message: 'A new 6-digit OTP has been sent.',
-      otpDemoDisplay: rawOtp,
+      message: 'A new 6-digit OTP has been sent to your email.',
+      emailPreviewUrl: emailResult.previewUrl || null,
       expiresInMinutes: config.otpExpiryMinutes
     });
 
