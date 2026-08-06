@@ -69,17 +69,33 @@ export function OTPVerifyForm({ regData, onVerificationSuccess, onSwitchToLogin 
         }
 
         if (!response.ok || !data.success) {
-          throw new Error(data?.error || 'OTP Verification failed.');
+          throw new Error(data?.error || (isTa ? 'OTP சரிபார்ப்பு தோல்வியடைந்தது.' : 'OTP Verification failed.'));
         }
       } catch (apiErr) {
-        console.warn('Backend API unavailable, executing client-side verification fallback:', apiErr);
+        // Local DB verification fallback
+        const existingUsers = JSON.parse(localStorage.getItem('geocrop_users') || '[]');
+        const userIndex = existingUsers.findIndex(u => u.id === regData?.userId || u.email === regData?.email);
+
+        if (userIndex === -1) {
+          throw new Error(isTa ? 'பயனர் கணக்கு பெறப்படவில்லை.' : 'User account not found.');
+        }
+
+        const user = existingUsers[userIndex];
+        if (user.currentOtp !== otp.trim()) {
+          throw new Error(isTa ? 'தவறான 6-இலக்க OTP குறியீடு.' : 'Invalid 6-digit OTP code.');
+        }
+
+        // Mark verified
+        existingUsers[userIndex].isVerified = true;
+        localStorage.setItem('geocrop_users', JSON.stringify(existingUsers));
+
         data = {
           success: true,
           user: {
-            id: regData?.userId || Date.now(),
-            fullName: 'Civil Engineer',
-            username: 'engineer',
-            email: regData?.email || 'engineer@geocrop.ai'
+            id: user.id,
+            fullName: user.fullName,
+            username: user.username,
+            email: user.email
           }
         };
       }
@@ -90,7 +106,7 @@ export function OTPVerifyForm({ regData, onVerificationSuccess, onSwitchToLogin 
       }, 600);
 
     } catch (err) {
-      setErrorMsg(err.message || 'OTP Verification failed.');
+      setErrorMsg(err.message || (isTa ? 'OTP சரிபார்ப்பு தோல்வியடைந்தது.' : 'OTP Verification failed.'));
     } finally {
       setIsLoading(false);
     }
@@ -139,14 +155,6 @@ export function OTPVerifyForm({ regData, onVerificationSuccess, onSwitchToLogin 
           {isTa ? 'உங்கள் பதிவுசெய்த மின்னஞ்சல் / மொபைலுக்கு அனுப்பப்பட்ட OTP ஐ உள்ளிடவும்' : `Enter the 6-digit OTP code sent to ${regData?.email || 'your account'}`}
         </p>
       </div>
-
-      {/* Demo OTP Banner for Instant Testing */}
-      {demoOtp && (
-        <div className="bg-emerald-950/80 border border-emerald-500/40 p-3 rounded-2xl text-center text-xs space-y-1">
-          <span className="text-emerald-400 font-bold block">{isTa ? 'டெமோ OTP குறியீடு (Demo Mode):' : 'Demo OTP Code for Instant Testing:'}</span>
-          <span className="text-2xl font-black tracking-widest text-white font-mono">{demoOtp}</span>
-        </div>
-      )}
 
       {errorMsg && (
         <div className="p-3 bg-rose-950/60 border border-rose-500/40 rounded-xl text-xs text-rose-200 flex items-center gap-2">

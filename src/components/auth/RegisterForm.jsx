@@ -50,25 +50,49 @@ export function RegisterForm({ onRegisterSuccess, onSwitchToLogin }) {
         }
 
         if (!response.ok || !data.success) {
-          throw new Error(data?.error || 'Registration failed.');
+          throw new Error(data?.error || (isTa ? 'பதிவுத் தோல்வியடைந்தது.' : 'Registration failed.'));
         }
       } catch (apiErr) {
-        console.warn('Backend API unavailable, executing secure client-side registration fallback:', apiErr);
-        
-        // Client-side fallback for static deployments (Vercel / Offline / Android)
-        const demoOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        // Local DB storage fallback for static/offline/APK deployments
+        const existingUsers = JSON.parse(localStorage.getItem('geocrop_users') || '[]');
+        const cleanUsername = formData.username.trim().toLowerCase();
+        const cleanEmail = formData.email.trim().toLowerCase();
+
+        const userExists = existingUsers.some(u => u.username === cleanUsername || u.email === cleanEmail);
+        if (userExists) {
+          throw new Error(isTa ? 'பயனர்பெயர் அல்லது மின்னஞ்சல் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.' : 'Username or email is already registered.');
+        }
+
+        const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const newUser = {
+          id: Date.now(),
+          fullName: formData.fullName.trim(),
+          username: cleanUsername,
+          email: cleanEmail,
+          mobile: formData.mobile.trim(),
+          password: formData.password,
+          isVerified: false,
+          currentOtp: generatedOtp
+        };
+
+        existingUsers.push(newUser);
+        localStorage.setItem('geocrop_users', JSON.stringify(existingUsers));
+
+        // Console log for production verification without showing on screen
+        console.log('🔒 Generated Verification OTP:', generatedOtp);
+
         data = {
           success: true,
-          userId: Date.now(),
-          email: formData.email,
-          otpDemoDisplay: demoOtp,
+          userId: newUser.id,
+          email: cleanEmail,
+          otpCode: generatedOtp,
           message: 'Registration successful!'
         };
       }
 
       onRegisterSuccess(data);
     } catch (err) {
-      setErrorMsg(err.message || 'Registration failed.');
+      setErrorMsg(err.message || (isTa ? 'பதிவுத் தோல்வியடைந்தது.' : 'Registration failed.'));
     } finally {
       setIsLoading(false);
     }

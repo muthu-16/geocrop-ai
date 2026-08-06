@@ -49,13 +49,27 @@ export function ResetPasswordForm({ resetData, onResetSuccess }) {
           throw new Error(data?.error || 'Failed to reset password.');
         }
       } catch (apiErr) {
-        console.warn('Backend API unavailable, executing client-side reset password fallback:', apiErr);
+        // Local DB password reset check
+        const existingUsers = JSON.parse(localStorage.getItem('geocrop_users') || '[]');
+        const userIndex = existingUsers.findIndex(u => u.id === resetData?.userId || u.email === resetData?.email);
+
+        if (userIndex === -1) {
+          throw new Error(isTa ? 'பயனர் கணக்கு பெறப்படவில்லை.' : 'User account not found.');
+        }
+
+        const user = existingUsers[userIndex];
+        if (user.currentOtp !== otp.trim()) {
+          throw new Error(isTa ? 'தவறான 6-இலக்க OTP குறியீடு.' : 'Invalid 6-digit OTP code.');
+        }
+
+        existingUsers[userIndex].password = newPassword;
+        localStorage.setItem('geocrop_users', JSON.stringify(existingUsers));
         data = { success: true };
       }
 
       onResetSuccess();
     } catch (err) {
-      setErrorMsg(err.message || 'Failed to reset password.');
+      setErrorMsg(err.message || (isTa ? 'கடவுச்சொல் மாற்றுவது தோல்வியடைந்தது.' : 'Failed to reset password.'));
     } finally {
       setIsLoading(false);
     }
@@ -71,13 +85,6 @@ export function ResetPasswordForm({ resetData, onResetSuccess }) {
           {isTa ? '6-இலக்க OTP மற்றும் புதிய கடவுச்சொல்லை உள்ளிடவும்' : 'Enter 6-digit OTP code and your new password'}
         </p>
       </div>
-
-      {demoOtp && (
-        <div className="bg-amber-950/80 border border-amber-500/40 p-3 rounded-2xl text-center text-xs space-y-1">
-          <span className="text-amber-400 font-bold block">{isTa ? 'மீட்பு OTP குறியீடு (Demo Mode):' : 'Reset OTP Code (Demo Mode):'}</span>
-          <span className="text-2xl font-black tracking-widest text-white font-mono">{demoOtp}</span>
-        </div>
-      )}
 
       {errorMsg && (
         <div className="p-3 bg-rose-950/60 border border-rose-500/40 rounded-xl text-xs text-rose-200 flex items-center gap-2">

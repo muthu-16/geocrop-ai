@@ -42,24 +42,42 @@ export function LoginForm({ onLoginSuccess, onSwitchToRegister, onSwitchToForgot
             onRequiresOTP(data);
             return;
           }
-          throw new Error(data?.error || 'Login failed.');
+          throw new Error(data?.error || (isTa ? 'தவறான பயனர்பெயர்/மின்னஞ்சல் அல்லது கடவுச்சொல்.' : 'Invalid username/email or password.'));
         }
       } catch (apiErr) {
-        console.warn('Backend API unavailable, executing client-side login fallback:', apiErr);
+        // Strict Local DB Authentication Check
+        const existingUsers = JSON.parse(localStorage.getItem('geocrop_users') || '[]');
+        const cleanId = identifier.trim().toLowerCase();
+
+        const user = existingUsers.find(u => u.username === cleanId || u.email === cleanId);
+
+        if (!user) {
+          throw new Error(isTa ? 'கணக்கு பெறப்படவில்லை. தயவுசெய்து முதலில் பதிவு செய்யவும்.' : 'Account not found. Please register first.');
+        }
+
+        if (user.password !== password) {
+          throw new Error(isTa ? 'தவறான கடவுச்சொல்.' : 'Invalid password.');
+        }
+
+        if (!user.isVerified) {
+          onRequiresOTP({ userId: user.id, email: user.email });
+          return;
+        }
+
         data = {
           success: true,
           user: {
-            id: Date.now(),
-            fullName: 'Civil Engineer',
-            username: identifier || 'engineer',
-            email: 'engineer@geocrop.ai'
+            id: user.id,
+            fullName: user.fullName,
+            username: user.username,
+            email: user.email
           }
         };
       }
 
       onLoginSuccess(data);
     } catch (err) {
-      setErrorMsg(err.message || 'Login failed.');
+      setErrorMsg(err.message || (isTa ? 'உள்நுழைவு தோல்வியடைந்தது.' : 'Login failed.'));
     } finally {
       setIsLoading(false);
     }
