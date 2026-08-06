@@ -447,3 +447,78 @@ export async function getProfile(req, res) {
     user: req.user
   });
 }
+
+/**
+ * 8. Save Official Audit Generated Report API (Government Audit Archive)
+ */
+export async function saveReport(req, res) {
+  try {
+    const {
+      userId,
+      engineerName,
+      locationCity,
+      locationDistrict,
+      gpsCoords,
+      soilType,
+      safeBearingCapacity,
+      maxSafeFloors,
+      targetFloors,
+      targetStatus,
+      pdfBase64
+    } = req.body;
+
+    const reportRefId = `GC-REPORT-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const stmt = db.prepare(`
+      INSERT INTO generated_reports (
+        report_ref_id, user_id, engineer_name, location_city, location_district,
+        gps_coords, soil_type, safe_bearing_capacity, max_safe_floors,
+        target_floors, target_status, pdf_base64
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    stmt.run(
+      reportRefId,
+      userId || null,
+      engineerName || 'Civil Engineer',
+      locationCity || 'Site',
+      locationDistrict || '',
+      gpsCoords || '',
+      soilType || 'alluvial',
+      parseFloat(safeBearingCapacity) || 0,
+      parseInt(maxSafeFloors) || 0,
+      parseInt(targetFloors) || 0,
+      targetStatus || 'FEASIBLE',
+      pdfBase64 || null
+    );
+
+    console.log(`📄 Official Audit Report [${reportRefId}] archived into SQLite Database!`);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Report saved to Government Audit database archive.',
+      reportRefId
+    });
+  } catch (err) {
+    console.error('Save Report Error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to archive report.' });
+  }
+}
+
+/**
+ * 9. Get Archived Government Reports API
+ */
+export async function getReports(req, res) {
+  try {
+    const reports = db.prepare(`
+      SELECT id, report_ref_id, engineer_name, location_city, location_district, gps_coords, soil_type, safe_bearing_capacity, max_safe_floors, target_floors, target_status, created_at
+      FROM generated_reports
+      ORDER BY id DESC LIMIT 50
+    `).all();
+
+    return res.status(200).json({ success: true, reports });
+  } catch (err) {
+    console.error('Get Reports Error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to fetch archived reports.' });
+  }
+}

@@ -6,7 +6,9 @@ import {
   login,
   forgotPassword,
   resetPassword,
-  getProfile
+  getProfile,
+  saveReport,
+  getReports
 } from '../controllers/authController.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { strict10ReqPerSecLimiter } from '../middleware/rateLimiter.js';
@@ -23,5 +25,9 @@ router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.get('/profile', authenticateToken, getProfile);
+
+// Audit Report Archive Endpoints
+router.post('/save-report', saveReport);
+router.get('/reports', getReports);
 
 export default router;

@@ -33,6 +33,29 @@ export function PDFReportGenerator({ geoState, geoResults, agriState, agriResult
       const dateStr = new Date().toISOString().slice(0,10);
       const filename = `GeoCrop_AI_Official_Report_${sanitizedAddress}_${dateStr}.pdf`;
 
+      // Save Report to Database Archive for Government / Structural Audit
+      try {
+        const pdfBase64 = pdf.output('datauristring');
+        fetch('/api/auth/save-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            engineerName: 'Chief Geotechnical Auditor',
+            locationCity: location?.city || 'Site',
+            locationDistrict: location?.district || '',
+            gpsCoords: `${location?.lat?.toFixed(4)}, ${location?.lng?.toFixed(4)}`,
+            soilType: geoState?.soilType || 'alluvial',
+            safeBearingCapacity: geoResults?.bearingCapacity || 0,
+            maxSafeFloors: geoResults?.design?.maxFloors || 0,
+            targetFloors: geoResults?.targetFloorAdvisory?.targetFloors || 0,
+            targetStatus: geoResults?.targetFloorAdvisory?.targetStatus || 'FEASIBLE',
+            pdfBase64: pdfBase64.slice(0, 1000) // store URI snippet / metadata
+          })
+        }).catch(e => console.warn('Archive note:', e));
+      } catch (e) {
+        console.warn('Archive report note:', e);
+      }
+
       // Try jsPDF save
       pdf.save(filename);
 

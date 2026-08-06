@@ -81,20 +81,28 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_login_attempts_identifier ON login_attempts(identifier);
   `);
 
-  // 5. Sessions & Active Tokens Table
+  // 6. Official Audit Generated Reports Table (For Government / Structural Audit Records)
   db.exec(`
-    CREATE TABLE IF NOT EXISTS sessions (
+    CREATE TABLE IF NOT EXISTS generated_reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      jwt_token TEXT NOT NULL,
-      ip_address TEXT,
-      user_agent TEXT,
-      expires_at DATETIME NOT NULL,
+      report_ref_id TEXT NOT NULL UNIQUE,
+      user_id INTEGER,
+      engineer_name TEXT,
+      location_city TEXT,
+      location_district TEXT,
+      gps_coords TEXT,
+      soil_type TEXT,
+      safe_bearing_capacity REAL,
+      max_safe_floors INTEGER,
+      target_floors INTEGER,
+      target_status TEXT,
+      pdf_base64 TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     );
 
-    CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_reports_ref_id ON generated_reports(report_ref_id);
+    CREATE INDEX IF NOT EXISTS idx_reports_user_id ON generated_reports(user_id);
   `);
 
   console.log('✅ SQLite Database & Tables Initialized Successfully at:', dbPath);
