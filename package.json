@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "server": "node server/server.js",
+    "reset-users": "node server/resetUsers.js",
     "build": "vite build",
     "preview": "vite preview"
   },
