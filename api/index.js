@@ -1,8 +1,8 @@
 import nodemailer from 'nodemailer';
 
-// Memory store for Vercel Serverless Functions
-const tempUserStore = new Map();
-const tempOtpStore = new Map();
+// Persistent Map store for Vercel Serverless Function lifecycle
+const registeredUsersMap = new Map(); // key: email -> user object
+const otpStoreMap = new Map(); // key: userId -> { otp, expiresAt }
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -29,21 +29,47 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'Full name, email, and password are required.' });
       }
 
+      if (password !== confirmPassword) {
+        return res.status(400).json({ success: false, error: 'Password and Confirm Password do not match.' });
+      }
+
       const cleanEmail = email.trim().toLowerCase();
+      const cleanUsername = (username || cleanEmail).trim().toLowerCase();
+
+      // Check if Email or Username is already registered
+      let isAlreadyRegistered = false;
+      for (const [_, existingUser] of registeredUsersMap.entries()) {
+        if (existingUser.email === cleanEmail) {
+          return res.status(400).json({
+            success: false,
+            error: 'This email address is already registered. Please sign in instead.'
+          });
+        }
+        if (existingUser.username === cleanUsername) {
+          return res.status(400).json({
+            success: false,
+            error: 'This username is already taken. Please choose another username.'
+          });
+        }
+      }
+
       const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
       const userId = Date.now();
 
-      tempUserStore.set(userId, {
+      // Store draft registration pending OTP verification
+      const newUserObj = {
         id: userId,
-        fullName,
-        username: username || cleanEmail,
+        fullName: fullName.trim(),
+        username: cleanUsername,
         email: cleanEmail,
-        mobile,
-        password,
-        isVerified: false
-      });
+        mobile: (mobile || '').trim(),
+        password: password,
+        isVerified: false,
+        registeredAt: new Date().toISOString()
+      };
 
-      tempOtpStore.set(userId, {
+      registeredUsersMap.set(cleanEmail, newUserObj);
+      otpStoreMap.set(userId, {
         otp: rawOtp,
         expiresAt: Date.now() + 5 * 60 * 1000
       });
@@ -102,21 +128,40 @@ export default async function handler(req, res) {
 
     } catch (err) {
       console.error('Vercel Register Error:', err);
-      return res.status(500).json({ success: false, error: err.message || 'Failed to send OTP email.' });
+      return res.status(500).json({ success: false, error: err.message || 'Failed to register account.' });
     }
   }
 
   // 2. VERIFY OTP ROUTE (/api/auth/verify-otp)
   if (url.includes('/api/auth/verify-otp') && req.method === 'POST') {
     const { userId, otp } = req.body || {};
-    const record = tempOtpStore.get(Number(userId));
+    const record = otpStoreMap.get(Number(userId));
 
-    if (record && record.otp === String(otp).trim()) {
-      const user = tempUserStore.get(Number(userId));
-      return res.status(200).json({
-        success: true,
-        user: user || { id: userId, fullName: 'Civil Engineer', email: 'user@geocrop.ai' }
-      });
+    if (!record) {
+      return res.status(400).json({ success: false, error: 'OTP request expired or invalid.' });
+    }
+
+    if (Date.now() > record.expiresAt) {
+      return res.status(400).json({ success: false, error: 'OTP code has expired. Please click Resend OTP.' });
+    }
+
+    if (record.otp === String(otp).trim()) {
+      // Find user and mark verified
+      for (const [emailKey, userObj] of registeredUsersMap.entries()) {
+        if (userObj.id === Number(userId)) {
+          userObj.isVerified = true;
+          registeredUsersMap.set(emailKey, userObj);
+          return res.status(200).json({
+            success: true,
+            user: {
+              id: userObj.id,
+              fullName: userObj.fullName,
+              username: userObj.username,
+              email: userObj.email
+            }
+          });
+        }
+      }
     }
 
     return res.status(400).json({ success: false, error: 'Invalid 6-digit OTP code.' });
@@ -125,9 +170,55 @@ export default async function handler(req, res) {
   // 3. LOGIN ROUTE (/api/auth/login)
   if (url.includes('/api/auth/login') && req.method === 'POST') {
     const { identifier, password } = req.body || {};
+    if (!identifier || !password) {
+      return res.status(400).json({ success: false, error: 'Username/Email and Password are required.' });
+    }
+
+    const cleanId = String(identifier).trim().toLowerCase();
+
+    // Search user by email or username
+    let foundUser = null;
+    for (const [_, userObj] of registeredUsersMap.entries()) {
+      if (userObj.email === cleanId || userObj.username === cleanId) {
+        foundUser = userObj;
+        break;
+      }
+    }
+
+    if (!foundUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Account not found. Please register first.'
+      });
+    }
+
+    // STRICT PASSWORD VERIFICATION
+    if (foundUser.password !== password) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid password. Authentication failed.'
+      });
+    }
+
+    // STRICT VERIFICATION CHECK
+    if (!foundUser.isVerified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Your account is not verified. Please complete OTP verification.',
+        requiresOTP: true,
+        userId: foundUser.id
+      });
+    }
+
     return res.status(200).json({
       success: true,
-      user: { id: Date.now(), fullName: 'Civil Engineer', username: identifier, email: identifier }
+      message: 'Login successful!',
+      user: {
+        id: foundUser.id,
+        fullName: foundUser.fullName,
+        username: foundUser.username,
+        email: foundUser.email
+      }
     });
   }
 
