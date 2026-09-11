@@ -33,7 +33,7 @@ export async function register(req, res) {
     const cleanEmail = email.trim().toLowerCase();
     const cleanMobile = mobile.trim();
 
-    // Check unique constraints
+    // Check unique constraints (only in confirmed users)
     const existingUser = db.prepare(
       'SELECT id, username, email, mobile, is_verified FROM users WHERE username = ? OR email = ? OR mobile = ?'
     ).get(cleanUsername, cleanEmail, cleanMobile);
@@ -54,25 +54,21 @@ export async function register(req, res) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Insert user into SQLite database
-    const insertStmt = db.prepare(`
-      INSERT INTO users (full_name, username, email, mobile, password_hash, is_verified)
-      VALUES (?, ?, ?, ?, ?, 0)
-    `);
-
-    const result = insertStmt.run(fullName.trim(), cleanUsername, cleanEmail, cleanMobile, passwordHash);
-    const userId = result.lastInsertRowid;
-
     // Generate 6-Digit OTP
     const rawOtp = generate6DigitOTP();
     const otpHash = await bcrypt.hash(rawOtp, 10);
     const expiresAt = new Date(Date.now() + config.otpExpiryMinutes * 60 * 1000).toISOString();
 
-    // Store OTP in database
-    db.prepare(`
-      INSERT INTO otp_verifications (user_id, otp_code_hash, plain_otp, expires_at)
-      VALUES (?, ?, ?, ?)
-    `).run(userId, otpHash, rawOtp, expiresAt);
+    // DO NOT save to users table yet. Save to pending_registrations.
+    const insertStmt = db.prepare(`
+      INSERT INTO pending_registrations (full_name, username, email, mobile, password_hash, otp_code_hash, plain_otp, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const result = insertStmt.run(
+      fullName.trim(), cleanUsername, cleanEmail, cleanMobile, passwordHash, otpHash, rawOtp, expiresAt
+    );
+    const pendingId = result.lastInsertRowid;
 
     // Dispatch real email via Nodemailer
     const emailResult = await sendOTPEmail(cleanEmail, rawOtp, fullName.trim());
@@ -80,7 +76,7 @@ export async function register(req, res) {
     return res.status(201).json({
       success: true,
       message: 'Registration successful! A 6-digit OTP code has been sent to your email.',
-      userId,
+      userId: pendingId, // Sending pending ID as userId
       email: cleanEmail,
       emailPreviewUrl: emailResult.previewUrl || null,
       expiresInMinutes: config.otpExpiryMinutes
@@ -103,35 +99,51 @@ export async function verifyOTP(req, res) {
       return res.status(400).json({ success: false, error: 'User ID and 6-digit OTP code are required.' });
     }
 
-    const otpRecord = db.prepare(`
-      SELECT * FROM otp_verifications 
-      WHERE user_id = ? 
-      ORDER BY id DESC LIMIT 1
+    const pendingRecord = db.prepare(`
+      SELECT * FROM pending_registrations 
+      WHERE id = ? 
     `).get(userId);
 
-    if (!otpRecord) {
+    if (!pendingRecord) {
       return res.status(400).json({ success: false, error: 'No OTP request found for this account.' });
     }
 
     // Check expiration (5 minutes)
-    if (new Date() > new Date(otpRecord.expires_at)) {
+    if (new Date() > new Date(pendingRecord.expires_at)) {
       return res.status(400).json({ success: false, error: 'OTP has expired (5-minute limit). Please click Resend OTP.' });
     }
 
     // Verify OTP hash
-    const isMatch = await bcrypt.compare(otp.trim(), otpRecord.otp_code_hash);
+    const isMatch = await bcrypt.compare(otp.trim(), pendingRecord.otp_code_hash);
     if (!isMatch) {
       return res.status(400).json({ success: false, error: 'Invalid 6-digit OTP code.' });
     }
 
-    // Activate user account
-    db.prepare('UPDATE users SET is_verified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(userId);
+    // Double check unique constraints again in case someone else took it while pending
+    const existingUser = db.prepare(
+      'SELECT id, username, email, mobile FROM users WHERE username = ? OR email = ? OR mobile = ?'
+    ).get(pendingRecord.username, pendingRecord.email, pendingRecord.mobile);
 
-    // Delete verified OTP record
-    db.prepare('DELETE FROM otp_verifications WHERE user_id = ?').run(userId);
+    if (existingUser) {
+       return res.status(400).json({ success: false, error: 'Username/Email/Mobile was taken while verifying OTP.' });
+    }
 
-    // Get user details
-    const user = db.prepare('SELECT id, full_name, username, email, mobile FROM users WHERE id = ?').get(userId);
+    // Activate user account (Move from pending to real users table)
+    const insertUserStmt = db.prepare(`
+      INSERT INTO users (full_name, username, email, mobile, password_hash, is_verified)
+      VALUES (?, ?, ?, ?, ?, 1)
+    `);
+    
+    const userResult = insertUserStmt.run(
+      pendingRecord.full_name, pendingRecord.username, pendingRecord.email, pendingRecord.mobile, pendingRecord.password_hash
+    );
+    const newUserId = userResult.lastInsertRowid;
+
+    // Delete verified pending record
+    db.prepare('DELETE FROM pending_registrations WHERE id = ?').run(userId);
+
+    // Get final user details
+    const user = db.prepare('SELECT id, full_name, username, email, mobile FROM users WHERE id = ?').get(newUserId);
 
     // Issue JWT Token
     const token = jwt.sign({ userId: user.id, username: user.username }, config.jwtSecret, { expiresIn: '7d' });
@@ -154,33 +166,25 @@ export async function verifyOTP(req, res) {
  */
 export async function resendOTP(req, res) {
   try {
-    const { userId } = req.body;
+    const { userId } = req.body; // Actually the pending_registration ID
 
     if (!userId) {
       return res.status(400).json({ success: false, error: 'User ID is required.' });
     }
 
-    const user = db.prepare('SELECT id, email FROM users WHERE id = ?').get(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found.' });
+    const pendingRecord = db.prepare('SELECT id, email, full_name, created_at FROM pending_registrations WHERE id = ?').get(userId);
+    if (!pendingRecord) {
+      return res.status(404).json({ success: false, error: 'Registration session expired or not found. Please register again.' });
     }
 
     // Check 60-second cooldown from last OTP
-    const lastOtp = db.prepare(`
-      SELECT created_at FROM otp_verifications 
-      WHERE user_id = ? 
-      ORDER BY id DESC LIMIT 1
-    `).get(userId);
-
-    if (lastOtp) {
-      const secondsPassed = Math.floor((Date.now() - new Date(lastOtp.created_at).getTime()) / 1000);
-      if (secondsPassed < config.otpResendCooldownSeconds) {
-        const remainingSec = config.otpResendCooldownSeconds - secondsPassed;
-        return res.status(429).json({
-          success: false,
-          error: `Please wait ${remainingSec} seconds before requesting a new OTP.`
-        });
-      }
+    const secondsPassed = Math.floor((Date.now() - new Date(pendingRecord.created_at).getTime()) / 1000);
+    if (secondsPassed < config.otpResendCooldownSeconds) {
+      const remainingSec = config.otpResendCooldownSeconds - secondsPassed;
+      return res.status(429).json({
+        success: false,
+        error: `Please wait ${remainingSec} seconds before requesting a new OTP.`
+      });
     }
 
     // Generate new 6-digit OTP
@@ -189,12 +193,13 @@ export async function resendOTP(req, res) {
     const expiresAt = new Date(Date.now() + config.otpExpiryMinutes * 60 * 1000).toISOString();
 
     db.prepare(`
-      INSERT INTO otp_verifications (user_id, otp_code_hash, plain_otp, expires_at)
-      VALUES (?, ?, ?, ?)
-    `).run(userId, otpHash, rawOtp, expiresAt);
+      UPDATE pending_registrations 
+      SET otp_code_hash = ?, plain_otp = ?, expires_at = ?, created_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(otpHash, rawOtp, expiresAt, userId);
 
     // Dispatch real email via Nodemailer
-    const emailResult = await sendOTPEmail(user.email, rawOtp, user.full_name || 'Engineer');
+    const emailResult = await sendOTPEmail(pendingRecord.email, rawOtp, pendingRecord.full_name || 'Engineer');
 
     return res.status(200).json({
       success: true,

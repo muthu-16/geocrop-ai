@@ -37,13 +37,29 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_users_mobile ON users(mobile);
   `);
 
-  // 2. OTP Verification Table
+  // 2. Pending Registrations Table (Holds user data UNTIL OTP is verified)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pending_registrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      full_name TEXT NOT NULL,
+      username TEXT NOT NULL,
+      email TEXT NOT NULL,
+      mobile TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      otp_code_hash TEXT NOT NULL,
+      plain_otp TEXT,
+      expires_at DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // 3. OTP Verification Table (Legacy / fallback, optional)
   db.exec(`
     CREATE TABLE IF NOT EXISTS otp_verifications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
+      user_id INTEGER,
       otp_code_hash TEXT NOT NULL,
-      plain_otp TEXT, -- stored temporarily for demonstration/SMS response
+      plain_otp TEXT,
       expires_at DATETIME NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
