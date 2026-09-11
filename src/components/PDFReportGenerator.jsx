@@ -4,12 +4,14 @@ import { useLanguage } from '../context/LanguageContext';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-export function PDFReportGenerator({ geoState, geoResults, agriState, agriResults, location }) {
+export function PDFReportGenerator({ geoState, geoResults, agriState, agriResults, location, defaultMode }) {
   const { t, lang } = useLanguage();
   const reportRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [includeCivil, setIncludeCivil] = useState(true);
-  const [includeAgri, setIncludeAgri] = useState(true);
+  
+  // Initialize checkboxes based on where the user came from
+  const [includeCivil, setIncludeCivil] = useState(defaultMode !== 'report-agri');
+  const [includeAgri, setIncludeAgri] = useState(defaultMode !== 'report-geo');
 
   const handleDownloadPDF = async () => {
     if (!reportRef.current) return;

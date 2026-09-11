@@ -67,36 +67,36 @@ export function Header({ activeTab, setActiveTab, currentUser, onLogout }) {
             </div>
           </div>
 
-          {/* Navigation Tabs (Only Dashboard) */}
-          <div className="hidden md:flex items-center gap-1 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                activeTab === 'dashboard'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <span>{isTa ? 'முகப்பு' : 'Dashboard'}</span>
-            </button>
+          {/* Navigation Tabs & User Name */}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Dashboard Button */}
+            <div className="bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                  activeTab === 'dashboard'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <span>{isTa ? 'முகப்பு' : 'Dashboard'}</span>
+              </button>
+            </div>
+
+            {/* User Name Tag */}
+            {currentUser && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span className="text-emerald-400 font-bold text-xs">
+                  {currentUser.fullName || currentUser.name || 'User'}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Actions: Language Toggle & User Logout */}
           <div className="flex items-center gap-2.5">
-            
-            {/* Logged In User Profile Badge */}
-            {currentUser && (
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold font-mono">
-                  {currentUser.name ? currentUser.name.charAt(0) : 'U'}
-                </div>
-                <div className="text-left leading-tight">
-                  <span className="text-white font-bold block">{currentUser.name}</span>
-                  <span className="text-[9px] text-slate-400 font-mono block">{currentUser.role}</span>
-                </div>
-              </div>
-            )}
 
             {/* Language Toggle Button */}
             <button

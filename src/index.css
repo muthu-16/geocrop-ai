@@ -31,3 +31,25 @@
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* --- USABILITY HEURISTIC FIXES --- */
+
+/* 1. Reduce Distinct Text Colors (Aim <= 12) */
+.text-slate-200, .text-slate-500 { color: #94a3b8 !important; }
+.text-emerald-300 { color: #34d399 !important; }
+.text-amber-300 { color: #fbbf24 !important; }
+.text-geo-300 { color: #38bdf8 !important; }
+.text-rose-300 { color: #fb7185 !important; }
+
+/* 2. Reduce Distinct Border Radii (Aim <= 6) */
+.rounded-lg { border-radius: 1rem !important; } /* maps to 2xl */
+.rounded-3xl { border-radius: 1rem !important; } /* maps to 2xl */
+.rounded-sm { border-radius: 0.25rem !important; } /* maps to rounded */
+
+/* 3. Reduce Button Style Variations (Aim <= 5) */
+button {
+  box-shadow: none !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  border-width: 0 !important;
+}

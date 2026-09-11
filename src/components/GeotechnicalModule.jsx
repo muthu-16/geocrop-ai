@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { SOIL_TYPES_GEO } from '../engine/geotechnicalEngine';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-export function GeotechnicalModule({ geoInputs, setGeoInputs, handleInputChange, geoResults }) {
+export function GeotechnicalModule({ geoInputs, setGeoInputs, handleInputChange, geoResults, setActiveTab }) {
   const { t, lang } = useLanguage();
   const isTa = lang === 'ta';
 
@@ -63,7 +63,7 @@ export function GeotechnicalModule({ geoInputs, setGeoInputs, handleInputChange,
                 <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">(G + {Math.max(0, maxFloors - 1)} Building)</span>
               </div>
               <div className="bg-slate-900/80 border border-slate-700/80 p-4 rounded-2xl">
-                <span className="text-xs text-slate-400 uppercase font-mono block font-bold">Bearing Capacity (q_safe)</span>
+                <span className="text-xs text-slate-400 font-mono block font-bold">Bearing Capacity (q_safe)</span>
                 <span className="text-2xl font-black text-white font-mono">{bearingCapacity} <span className="text-xs font-normal text-slate-400">kN/m²</span></span>
                 <span className="text-[10px] text-emerald-400 block mt-0.5 font-bold">FOS = 3.0 Verified</span>
               </div>
@@ -99,7 +99,7 @@ export function GeotechnicalModule({ geoInputs, setGeoInputs, handleInputChange,
                       <span>{isGround ? 'Ground Floor (G)' : `Floor ${floorNum - 1} (G+${floorNum - 1})`}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${isTop ? 'bg-emerald-900/80 text-emerald-200 border border-emerald-300' : 'bg-slate-800 text-emerald-400'}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${isTop ? 'bg-emerald-900/80 text-emerald-200 border border-emerald-300' : 'bg-slate-800 text-emerald-400'}`}>
                         {isTop ? 'Max Safe Limit' : 'Safe Structural Load'}
                       </span>
                     </div>
@@ -496,6 +496,18 @@ export function GeotechnicalModule({ geoInputs, setGeoInputs, handleInputChange,
 
         </div>
 
+      </div>
+
+      {/* GENERATE REPORT ACTION */}
+      <div className="flex justify-end mt-8">
+        <button
+          onClick={() => setActiveTab('report-geo')}
+          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 font-bold px-6 py-4 rounded-2xl shadow-xl shadow-amber-900/20 transition-all duration-300 group"
+        >
+          <HelpCircle className="w-5 h-5 hidden" />
+          <span>{isTa ? 'அதிகாரப்பூர்வ அறிக்கை உருவாக்கு' : 'Generate Official PDF Report'}</span>
+          <ArrowUpRight className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+        </button>
       </div>
 
     </div>

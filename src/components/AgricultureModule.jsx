@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Sprout, CheckCircle2, Award, Package, Droplets, Calendar, ChevronDown, ChevronUp, Beaker, Apple, Wheat, TreePine } from 'lucide-react';
+import { Sprout, CheckCircle2, Award, Package, Droplets, Calendar, ChevronDown, ChevronUp, Beaker, Apple, Wheat, TreePine, HelpCircle, ArrowUpRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { CROPS_DB, VEGETABLES_DB, FRUITS_DB } from '../engine/soilDatabase';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip } from 'recharts';
 
-export function AgricultureModule({ agriInputs, setAgriInputs, agriResults }) {
+export function AgricultureModule({ agriInputs, setAgriInputs, agriResults, setActiveTab }) {
   const { lang } = useLanguage();
   const [showMicronutrients, setShowMicronutrients] = useState(false);
 
@@ -124,7 +124,7 @@ export function AgricultureModule({ agriInputs, setAgriInputs, agriResults }) {
 
         {/* Chemical Parameters */}
         <div className="space-y-4 pt-4 border-t border-slate-700/50">
-          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
             <Beaker className="w-4 h-4" />
             {t.chemicalParams}
           </h3>
@@ -328,7 +328,7 @@ export function AgricultureModule({ agriInputs, setAgriInputs, agriResults }) {
               <span className="text-xs text-slate-500">({fertilizer.ureaKg} kg)</span>
             </div>
             <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-              <span className="text-sm font-medium text-slate-400 mb-1">DAP (18% N, 46% P)</span>
+              <span className="text-sm font-medium text-slate-400 mb-1">DAP (18% Nitrogen, 46% Phosphorus)</span>
               <span className="text-2xl font-bold text-white mb-1">{fertilizer.dapBags} {t.bags}</span>
               <span className="text-xs text-slate-500">({fertilizer.dapKg} kg)</span>
             </div>
@@ -420,6 +420,18 @@ export function AgricultureModule({ agriInputs, setAgriInputs, agriResults }) {
           </div>
         </div>
 
+      </div>
+
+      {/* GENERATE REPORT ACTION */}
+      <div className="flex justify-end mt-8">
+        <button
+          onClick={() => setActiveTab('report-agri')}
+          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 font-bold px-6 py-4 rounded-2xl shadow-xl shadow-amber-900/20 transition-all duration-300 group"
+        >
+          <HelpCircle className="w-5 h-5 hidden" />
+          <span>{lang === 'ta' ? 'அதிகாரப்பூர்வ அறிக்கை உருவாக்கு' : 'Generate Official PDF Report'}</span>
+          <ArrowUpRight className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+        </button>
       </div>
     </div>
   );

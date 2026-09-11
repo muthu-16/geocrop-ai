@@ -370,11 +370,14 @@ export async function forgotPassword(req, res) {
       VALUES (?, ?, ?, ?)
     `).run(user.id, otpHash, rawOtp, expiresAt);
 
+    // Send the real email
+    const emailResult = await sendOTPEmail(user.email, rawOtp, 'Engineer');
+
     return res.status(200).json({
       success: true,
-      message: 'Password reset 6-digit OTP generated.',
+      message: 'Password reset 6-digit OTP has been sent to your email.',
       userId: user.id,
-      otpDemoDisplay: rawOtp,
+      emailPreviewUrl: emailResult.previewUrl || null,
       expiresInMinutes: config.otpExpiryMinutes
     });
 

@@ -15,16 +15,13 @@ export function DashboardModule({ currentUser, setActiveTab, location }) {
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-48 h-48 bg-geo-500/10 blur-3xl rounded-full pointer-events-none"></div>
         
         <div className="relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-bold">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-bold uppercase tracking-wider">
             <Activity className="w-3.5 h-3.5" />
-            <span>{isTa ? 'செயலியில் இணைக்கப்பட்டுள்ளீர்கள்' : 'SYSTEM ONLINE & SECURE'}</span>
+            <span>{isTa ? 'பயனர்: ' : 'USER: '} {currentUser?.fullName || currentUser?.name || 'Engineer'}</span>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
-            {isTa ? 'வரவேற்கிறோம், ' : 'Welcome back, '}<br className="md:hidden"/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">
-              {currentUser?.fullName || currentUser?.name || 'Engineer'}
-            </span>
+            {isTa ? 'வரவேற்கிறோம்' : 'Welcome'}
           </h1>
           
           <p className="text-slate-400 text-sm md:text-base max-w-2xl leading-relaxed">
@@ -32,11 +29,6 @@ export function DashboardModule({ currentUser, setActiveTab, location }) {
               ? 'உங்கள் நிலத்தின் புவியியல் மற்றும் விவசாய தரவுகளை துல்லியமாக பகுப்பாய்வு செய்து, அஸ்திவாரம் மற்றும் உரம் குறித்த ஆலோசனைகளை பெறலாம்.' 
               : 'You are now securely logged into GeoCrop AI. Access your high-precision geotechnical engineering analytics and agronomy intelligence below.'}
           </p>
-
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500 pt-2">
-            <MapPin className="w-4 h-4 text-rose-500/70" />
-            <span>Current Zone: <strong className="text-slate-300">{location?.zone?.replace('_', ' ').toUpperCase() || 'UNKNOWN'}</strong></span>
-          </div>
         </div>
       </div>
 

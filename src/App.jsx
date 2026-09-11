@@ -139,11 +139,13 @@ function MainApp() {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <LocationPicker
-          location={location}
-          setLocation={setLocation}
-          onZoneChange={handleZoneChange}
-        />
+        {activeTab !== 'dashboard' && (
+          <LocationPicker
+            location={location}
+            setLocation={setLocation}
+            onZoneChange={handleZoneChange}
+          />
+        )}
 
         {activeTab === 'dashboard' && (
           <DashboardModule
@@ -159,6 +161,7 @@ function MainApp() {
             setGeoInputs={setGeoInputs}
             handleInputChange={handleGeoInputChange}
             geoResults={geoResults}
+            setActiveTab={setActiveTab}
           />
         )}
 
@@ -167,16 +170,18 @@ function MainApp() {
             agriInputs={agriInputs}
             setAgriInputs={setAgriInputs}
             agriResults={agriResults}
+            setActiveTab={setActiveTab}
           />
         )}
 
-        {activeTab === 'report' && (
+        {activeTab.startsWith('report') && (
           <PDFReportGenerator
             geoState={geoInputs}
             geoResults={geoResults}
             agriState={agriInputs}
             agriResults={agriResults}
             location={location}
+            defaultMode={activeTab}
           />
         )}
       </main>
