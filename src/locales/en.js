@@ -1,7 +1,7 @@
 export const en = {
   appTitle: "GeoCrop AI v2.0",
   subtitle: "Intelligent Geotechnical & Agricultural Analysis",
-  geotechnicalTab: "Geotechnical",
+  geotechnicalTab: "Civil Foundation",
   agricultureTab: "Agriculture",
   reportTab: "Reports",
   chatAssistant: "AI Assistant",
@@ -10,7 +10,7 @@ export const en = {
   tagline: "Empowering Infrastructure & Farming",
   locationStamp: "Location",
 
-  geoHeaderTitle: "Geotechnical Analysis",
+  geoHeaderTitle: "Civil Foundation Analysis",
   geoHeaderSub: "Analyze soil parameters for civil engineering",
   specificGravity: "Specific Gravity",
   soilTextureLabel: "Soil Texture",

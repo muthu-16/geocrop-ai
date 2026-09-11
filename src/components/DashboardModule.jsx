@@ -55,7 +55,7 @@ export function DashboardModule({ currentUser, setActiveTab, location }) {
             <Building2 className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-black text-white mb-2 group-hover:text-geo-300 transition-colors">
-            {isTa ? 'சிவில் / புவியியல் பகுப்பாய்வு' : 'Geotechnical Engineering'}
+            {isTa ? 'சிவில் / மண் பகுப்பாய்வு' : 'Civil Foundation & Soil'}
           </h3>
           <p className="text-xs text-slate-400 leading-relaxed mb-6">
             {isTa ? 'மண்ணின் தாங்கும் திறன், அஸ்திவாரம், மற்றும் 17-வகை மண் சோதனைகளை மேற்கொள்ளவும்.' : 'Calculate Safe Bearing Capacity (SBC), Foundation recommendations, and analyze 17 physical soil parameters.'}
