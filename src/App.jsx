@@ -5,6 +5,7 @@ import { LocationPicker } from './components/LocationPicker';
 import { GeotechnicalModule } from './components/GeotechnicalModule';
 import { AgricultureModule } from './components/AgricultureModule';
 import { PDFReportGenerator } from './components/PDFReportGenerator';
+import { DashboardModule } from './components/DashboardModule';
 import { AIChatbot } from './components/AIChatbot';
 import { AuthModal } from './components/auth/AuthModal';
 import { calculateGeotechnicalProperties, SOIL_TYPES } from './engine/geotechnicalEngine';
@@ -13,7 +14,7 @@ import { Shield } from 'lucide-react';
 
 function MainApp() {
   const { t, lang } = useLanguage();
-  const [activeTab, setActiveTab] = useState('geo');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [currentUser, setCurrentUser] = useState(null); // auth state
 
   // Location State
@@ -143,6 +144,14 @@ function MainApp() {
           setLocation={setLocation}
           onZoneChange={handleZoneChange}
         />
+
+        {activeTab === 'dashboard' && (
+          <DashboardModule
+            currentUser={currentUser}
+            setActiveTab={setActiveTab}
+            location={location}
+          />
+        )}
 
         {activeTab === 'geo' && (
           <GeotechnicalModule

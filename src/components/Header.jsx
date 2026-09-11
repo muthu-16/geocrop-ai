@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 export function Header({ activeTab, setActiveTab, currentUser, onLogout }) {
   const { lang, toggleLanguage, t } = useLanguage();
+  const isTa = lang === 'ta';
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
@@ -68,6 +69,18 @@ export function Header({ activeTab, setActiveTab, currentUser, onLogout }) {
 
           {/* Navigation Tabs */}
           <div className="hidden md:flex items-center gap-1 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                activeTab === 'dashboard'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>{isTa ? 'முகப்பு' : 'Dashboard'}</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('geo')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
@@ -148,6 +161,16 @@ export function Header({ activeTab, setActiveTab, currentUser, onLogout }) {
 
         {/* Mobile Tab Navigation */}
         <div className="md:hidden flex items-center justify-around py-2.5 border-t border-slate-800/60">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+              activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-400'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Home</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('geo')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
