@@ -65,7 +65,7 @@ function MainApp() {
     depth: '1.5',
     waterTable: '3.0',
     sptN: '18',
-    desiredFloors: '4'
+    desiredFloors: ''
   });
 
   // ===== AGRICULTURE STATE =====

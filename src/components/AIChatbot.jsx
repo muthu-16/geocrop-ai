@@ -45,7 +45,7 @@ export function AIChatbot({ geoState, agriState, setGeoInputs, setAgriInputs, se
     }
   }, [messages, isOpen]);
 
-  const handleSend = (textToSend) => {
+  const handleSend = async (textToSend) => {
     const query = textToSend || input;
     if (!query.trim()) return;
 
@@ -60,8 +60,57 @@ export function AIChatbot({ geoState, agriState, setGeoInputs, setAgriInputs, se
     if (!textToSend) setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      // 1. Try to parse parameters from user text
+    try {
+      // API call to the new Express Gemini backend
+      const response = await fetch('http://localhost:5000/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, geoState, agriState, lang })
+      });
+
+      if (!response.ok) {
+        throw new Error('Gemini API failed or key not configured');
+      }
+
+      const data = await response.json();
+      let autoFillMsg = '';
+      let autoFilled = false;
+
+      if (data.extractedParams) {
+        const hasGeo = Object.keys(data.extractedParams.geo || {}).length > 0;
+        const hasAgri = Object.keys(data.extractedParams.agri || {}).length > 0;
+
+        if (hasGeo && setGeoInputs) {
+          setGeoInputs(prev => ({ ...prev, ...data.extractedParams.geo }));
+        }
+        if (hasAgri && setAgriInputs) {
+          setAgriInputs(prev => ({ ...prev, ...data.extractedParams.agri }));
+        }
+
+        if (hasGeo || hasAgri) {
+          autoFilled = true;
+          autoFillMsg = lang === 'ta'
+            ? `✅ AI அளவுருக்களை வெற்றிகரமாக கண்டறிந்து படிவத்தில் தானாக நிரப்பியது!\n\n`
+            : `✅ AI successfully extracted and auto-filled soil parameters into the application forms!\n\n`;
+        }
+      }
+
+      if (data.navigate && setActiveTab) {
+        setActiveTab(data.navigate);
+      }
+
+      const botMsg = {
+        id: Date.now() + 1,
+        sender: 'bot',
+        text: autoFillMsg + data.answer,
+        hasActions: autoFilled || query.toLowerCase().includes('report') || query.toLowerCase().includes('pdf') || query.toLowerCase().includes('அறிக்கை'),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      setMessages(prev => [...prev, botMsg]);
+    } catch (err) {
+      console.warn('Fallback to local rule-based AI Engine due to Gemini error:', err);
+      // Fallback: 1. Try to parse parameters from user text
       const { parsedGeo, parsedAgri, count } = parseSoilInputsFromText(query);
       let autoFillMsg = '';
 
@@ -75,11 +124,11 @@ export function AIChatbot({ geoState, agriState, setGeoInputs, setAgriInputs, se
 
         const isTa = lang === 'ta';
         autoFillMsg = isTa
-          ? `✅ ${count} மண் அளவுருக்கள் வெற்றிகரமாக கண்டறியப்பட்டு படிவத்தில் தானாக நிரப்பப்பட்டன! (Auto-filled into form)\n\n`
+          ? `✅ ${count} மண் அளவுருக்கள் வெற்றிகரமாக கண்டறியப்பட்டு படிவத்தில் தானாக நிரப்பப்பட்டன!\n\n`
           : `✅ Successfully extracted and auto-filled ${count} soil parameters into the application forms!\n\n`;
       }
 
-      // 2. Generate AI Answer
+      // Fallback: 2. Generate AI Answer
       const answerText = autoFillMsg + generateAIAnswer(query, geoState, agriState, lang);
       
       const botMsg = {
@@ -91,8 +140,9 @@ export function AIChatbot({ geoState, agriState, setGeoInputs, setAgriInputs, se
       };
 
       setMessages(prev => [...prev, botMsg]);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
   };
 
   const handleActionClick = (tabName) => {

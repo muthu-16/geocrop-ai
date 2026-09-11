@@ -63,7 +63,7 @@ export function GeotechnicalModule({ geoInputs, setGeoInputs, handleInputChange,
                 <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">(G + {Math.max(0, maxFloors - 1)} Building)</span>
               </div>
               <div className="bg-slate-900/80 border border-slate-700/80 p-4 rounded-2xl">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block font-bold">Bearing Capacity (q_safe)</span>
+                <span className="text-xs text-slate-400 uppercase font-mono block font-bold">Bearing Capacity (q_safe)</span>
                 <span className="text-2xl font-black text-white font-mono">{bearingCapacity} <span className="text-xs font-normal text-slate-400">kN/m²</span></span>
                 <span className="text-[10px] text-emerald-400 block mt-0.5 font-bold">FOS = 3.0 Verified</span>
               </div>
@@ -325,9 +325,10 @@ export function GeotechnicalModule({ geoInputs, setGeoInputs, handleInputChange,
                 <input
                   type="number"
                   name="desiredFloors"
+                  placeholder="e.g. 4"
                   min="1"
                   max="15"
-                  value={geoInputs.desiredFloors || 4}
+                  value={geoInputs.desiredFloors}
                   onChange={handleInputChange}
                   className="w-full bg-slate-950 border border-emerald-500/60 rounded-xl p-2.5 text-emerald-300 font-mono font-extrabold focus:outline-none focus:border-emerald-400 ring-1 ring-emerald-500/30"
                 />
@@ -401,19 +402,21 @@ export function GeotechnicalModule({ geoInputs, setGeoInputs, handleInputChange,
                 </div>
 
                 <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold border uppercase ${
-                  geoResults.targetFloorAdvisory.targetStatus === 'safe'
+                  geoResults.targetFloorAdvisory.targetStatus === 'idle'
+                    ? 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                    : geoResults.targetFloorAdvisory.targetStatus === 'safe'
                     ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                     : geoResults.targetFloorAdvisory.targetStatus === 'warning'
                     ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                     : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
                 }`}>
-                  {geoResults.targetFloorAdvisory.targetStatus === 'safe' ? '✓ SAFE FEASIBLE' : geoResults.targetFloorAdvisory.targetStatus === 'warning' ? '⚠ REQUIRES RAFT' : '✕ DEEP PILING REQUIRED'}
+                  {geoResults.targetFloorAdvisory.targetStatus === 'idle' ? 'ℹ ENTER FLOORS' : geoResults.targetFloorAdvisory.targetStatus === 'safe' ? '✓ SAFE FEASIBLE' : geoResults.targetFloorAdvisory.targetStatus === 'warning' ? '⚠ REQUIRES RAFT' : '✕ DEEP PILING REQUIRED'}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono block mb-1">
+                  <span className="text-xs text-slate-400 font-medium font-mono block mb-1">
                     {isTa ? 'பரிந்துரைக்கப்படும் அஸ்திவாரம்' : 'Suggested Footing Type for Target'}
                   </span>
                   <strong className="text-emerald-300 font-extrabold text-sm block">

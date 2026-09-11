@@ -204,17 +204,23 @@ export function calculateGeotechnicalProperties(inputs) {
   stabilityScore = Math.max(10, Math.min(100, Math.round(stabilityScore)));
 
   // Target Floor Custom Advisory Engine
-  const targetFloors = Math.max(1, parseInt(inputs.desiredFloors) || 4);
-  const requiredBearingCapacity = targetFloors * 55; // Required kN/m² for target floors
-  const capacityRatio = Math.round((q_safe / requiredBearingCapacity) * 100);
+  const targetFloors = parseInt(inputs.desiredFloors) || 0;
+  const requiredBearingCapacity = targetFloors > 0 ? targetFloors * 55 : 0; // Required kN/m² for target floors
+  const capacityRatio = requiredBearingCapacity > 0 ? Math.round((q_safe / requiredBearingCapacity) * 100) : 0;
 
-  let targetStatus = 'safe'; // 'safe' | 'warning' | 'critical'
+  let targetStatus = 'safe'; // 'safe' | 'warning' | 'critical' | 'idle'
   let targetFootingEn = '';
   let targetFootingTa = '';
   let targetAdviceEn = '';
   let targetAdviceTa = '';
 
-  if (q_safe >= requiredBearingCapacity) {
+  if (targetFloors === 0) {
+    targetStatus = 'idle';
+    targetFootingEn = 'Please Enter Desired Floors';
+    targetFootingTa = 'மாடிகளின் எண்ணிக்கையை உள்ளிடவும்';
+    targetAdviceEn = 'Please enter the number of floors you intend to build to receive customized foundation advice and safety verification.';
+    targetAdviceTa = 'பொருத்தமான அஸ்திவார ஆலோசனையைப் பெற, நீங்கள் கட்ட விரும்பும் மாடிகளின் எண்ணிக்கையை உள்ளிடவும்.';
+  } else if (q_safe >= requiredBearingCapacity) {
     targetStatus = 'safe';
     if (targetFloors <= 2) {
       targetFootingEn = 'Strip / Isolated Pad Footing (1.2m x 1.2m)';

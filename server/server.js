@@ -3,6 +3,7 @@ import cors from 'cors';
 import { config } from './config/env.js';
 import { initDatabase } from './db/database.js';
 import authRoutes from './routes/authRoutes.js';
+import geminiRoutes from './routes/geminiRoutes.js';
 import { applySecurityMiddleware } from './middleware/security.js';
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/ai', geminiRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {

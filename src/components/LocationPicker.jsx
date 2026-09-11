@@ -198,9 +198,9 @@ export function LocationPicker({ location, setLocation, onZoneChange }) {
 
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-extrabold text-white">
+              <h2 className="text-base font-extrabold text-white">
                 {t('locationStamp')}
-              </h3>
+              </h2>
 
               {location.isLive ? (
                 <span className="inline-flex items-center gap-1.5 text-xs px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold animate-pulse">
