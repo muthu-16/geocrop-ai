@@ -14,12 +14,7 @@ import { Shield } from 'lucide-react';
 function MainApp() {
   const { t, lang } = useLanguage();
   const [activeTab, setActiveTab] = useState('geo');
-  const [currentUser, setCurrentUser] = useState({
-    id: 'guest',
-    fullName: 'Guest Engineer',
-    username: 'guest',
-    email: 'guest@geocrop.ai'
-  }); // auth state bypassed
+  const [currentUser, setCurrentUser] = useState(null); // auth state
 
   // Location State
   const [location, setLocation] = useState({
@@ -129,6 +124,9 @@ function MainApp() {
     });
   }, [agriInputs]);
 
+  if (!currentUser) {
+    return <AuthModal onAuthSuccess={(data) => setCurrentUser(data.user || data)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0b1118] text-slate-100 font-sans selection:bg-geo-500 selection:text-white pb-24">
@@ -136,7 +134,7 @@ function MainApp() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         currentUser={currentUser}
-        onLogout={() => {}}
+        onLogout={() => setCurrentUser(null)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
