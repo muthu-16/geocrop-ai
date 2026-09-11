@@ -67,7 +67,7 @@ export function Header({ activeTab, setActiveTab, currentUser, onLogout }) {
             </div>
           </div>
 
-          {/* Navigation Tabs */}
+          {/* Navigation Tabs (Only Dashboard) */}
           <div className="hidden md:flex items-center gap-1 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
             <button
               onClick={() => setActiveTab('dashboard')}
@@ -79,42 +79,6 @@ export function Header({ activeTab, setActiveTab, currentUser, onLogout }) {
             >
               <Layers className="w-4 h-4" />
               <span>{isTa ? 'முகப்பு' : 'Dashboard'}</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('geo')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                activeTab === 'geo'
-                  ? 'bg-geo-600 text-white shadow-md shadow-geo-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <Building2 className="w-4 h-4" />
-              <span>{t('geotechnicalTab')}</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('agri')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                activeTab === 'agri'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <Sprout className="w-4 h-4" />
-              <span>{t('agricultureTab')}</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('report')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                activeTab === 'report'
-                  ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>{t('reportTab')}</span>
             </button>
           </div>
 
@@ -159,46 +123,16 @@ export function Header({ activeTab, setActiveTab, currentUser, onLogout }) {
 
         </div>
 
-        {/* Mobile Tab Navigation */}
+        {/* Mobile Tab Navigation (Only Dashboard) */}
         <div className="md:hidden flex items-center justify-around py-2.5 border-t border-slate-800/60">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
-              activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-400'
+            className={`flex w-full items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+              activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Home</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('geo')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
-              activeTab === 'geo' ? 'bg-geo-600 text-white' : 'text-slate-400'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>Geo</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('agri')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
-              activeTab === 'agri' ? 'bg-emerald-600 text-white' : 'text-slate-400'
-            }`}
-          >
-            <Sprout className="w-3.5 h-3.5" />
-            <span>Agri</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('report')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
-              activeTab === 'report' ? 'bg-amber-600 text-white' : 'text-slate-400'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Report</span>
+            <Layers className="w-4 h-4" />
+            <span>{isTa ? 'முகப்பு' : 'Dashboard'}</span>
           </button>
         </div>
 

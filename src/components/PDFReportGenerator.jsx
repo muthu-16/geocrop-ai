@@ -8,6 +8,8 @@ export function PDFReportGenerator({ geoState, geoResults, agriState, agriResult
   const { t, lang } = useLanguage();
   const reportRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [includeCivil, setIncludeCivil] = useState(true);
+  const [includeAgri, setIncludeAgri] = useState(true);
 
   const handleDownloadPDF = async () => {
     if (!reportRef.current) return;
@@ -108,11 +110,35 @@ export function PDFReportGenerator({ geoState, geoResults, agriState, agriResult
         <div>
           <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
             <FileCheck className="w-5 h-5 text-amber-400" />
-            {isTa ? 'அதிகாரப்பூர்வ வெள்ளை வடிவ PDF அறிக்கை' : 'Official Civil & Agronomy Analysis Report'}
+            {isTa ? 'அதிகாரப்பூர்வ வெள்ளை வடிவ PDF அறிக்கை' : 'Official Analysis Report'}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-400 mt-1 mb-4">
             {isTa ? 'முறையான வெள்ளை நிற தாளிலும் சான்றளிக்கப்பட்ட பொறியியல் அமைப்பிலும் பதிவிறக்கவும்.' : 'Standard white executive format for official structural engineering submissions and agricultural auditing.'}
           </p>
+
+          <div className="flex items-center gap-4 text-xs font-bold bg-slate-950/50 p-2.5 rounded-xl border border-slate-700/50 inline-flex">
+            <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white transition-colors">
+              <input 
+                type="checkbox" 
+                checked={includeCivil} 
+                onChange={(e) => setIncludeCivil(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-geo-500 focus:ring-geo-500 focus:ring-offset-slate-900"
+              />
+              <Building2 className="w-4 h-4 text-geo-500" />
+              <span>Civil Foundation</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white transition-colors">
+              <input 
+                type="checkbox" 
+                checked={includeAgri} 
+                onChange={(e) => setIncludeAgri(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
+              />
+              <Sprout className="w-4 h-4 text-emerald-500" />
+              <span>Agriculture</span>
+            </label>
+          </div>
         </div>
 
         <button
@@ -233,180 +259,184 @@ export function PDFReportGenerator({ geoState, geoResults, agriState, agriResult
           </div>
 
           {/* SECTION 3: CIVIL GEOTECHNICAL SOIL ASSESSMENT */}
-          <div className="space-y-4 pt-1">
-            <h2 className="text-xs font-extrabold text-slate-900 uppercase tracking-widest border-b-2 border-slate-200 pb-1 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-emerald-600" />
-              {t('pdfGeoSection')}
-            </h2>
+          {includeCivil && (
+            <div className="space-y-4 pt-1">
+              <h2 className="text-xs font-extrabold text-slate-900 uppercase tracking-widest border-b-2 border-slate-200 pb-1 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-emerald-600" />
+                {t('pdfGeoSection')}
+              </h2>
 
-            {/* Key Mechanics Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase font-mono block">Specific Gravity</span>
-                <div className="text-lg font-mono font-bold text-slate-900">Gs = {geoState?.gs || 2.70}</div>
-                <span className="text-[10px] text-slate-600 block">Soil: {texture}</span>
-              </div>
-
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase font-mono block">Safe Bearing Cap (q_safe)</span>
-                <div className="text-lg font-mono font-bold text-emerald-700">{q_safe} <span className="text-xs font-normal text-slate-600">kN/m²</span></div>
-                <span className="text-[10px] text-slate-600 block">FOS = 3.0</span>
-              </div>
-
-              <div className="bg-slate-900 text-white p-3.5 rounded-2xl border border-slate-900 space-y-1 shadow-md">
-                <span className="text-[10px] text-slate-300 uppercase font-mono block">Max Safe Floor Limit</span>
-                <div className="text-xl font-mono font-bold text-emerald-400">{maxFloors} Floors</div>
-                <span className="text-[10px] text-slate-300 block">G + {Math.max(0, maxFloors - 1)} Structure</span>
-              </div>
-
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase font-mono block">Stability Score</span>
-                <div className="text-lg font-mono font-bold text-slate-900">{stabilityScore} / 100</div>
-                <span className="text-[10px] text-slate-600 block">Depth: {geoState?.depth || 1.5}m</span>
-              </div>
-
-            </div>
-
-            {/* Foundation Recommendation Box */}
-            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2 text-xs">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-                <span className="font-bold text-slate-700">{t('foundationTitle')}:</span>
-                <strong className="text-emerald-800 font-extrabold text-sm uppercase">{recommendation}</strong>
-              </div>
-              <p className="text-slate-700 leading-relaxed pt-1">
-                <strong className="text-slate-900">{isTa ? 'பொறியியல் காரணம்:' : 'Engineering Safety Rationale:'}</strong>{' '}
-                {recommendation}
-              </p>
-              <div className="text-amber-800 bg-amber-50 border border-amber-200 p-2.5 rounded-xl flex items-center gap-2 pt-1 text-[11px]">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-700" />
-                <span>Settlement Risk: <strong>{settlementRisk}</strong></span>
-              </div>
-            </div>
-
-            {/* Target Construction Floor & Custom Footing Advisory Box */}
-            {geoResults?.targetFloorAdvisory && (
-              <div className="bg-emerald-50/60 border-2 border-emerald-600/30 rounded-2xl p-5 space-y-3 text-xs">
-                <div className="flex justify-between items-center border-b border-emerald-200 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-emerald-800" />
-                    <strong className="text-slate-900 font-extrabold uppercase text-xs">
-                      {isTa ? `திட்டமிடப்பட்ட ${geoResults.targetFloorAdvisory.targetFloors} மாடி கட்டிட அடித்தள ஆலோசனை` : `Target Advisory: ${geoResults.targetFloorAdvisory.targetFloors} Floors Construction`}
-                    </strong>
-                  </div>
-                  <span className={`px-2.5 py-0.5 rounded-md font-mono text-[10px] font-extrabold border ${
-                    geoResults.targetFloorAdvisory.targetStatus === 'safe'
-                      ? 'bg-emerald-100 text-emerald-900 border-emerald-400'
-                      : geoResults.targetFloorAdvisory.targetStatus === 'warning'
-                      ? 'bg-amber-100 text-amber-900 border-amber-400'
-                      : 'bg-rose-100 text-rose-900 border-rose-400'
-                  }`}>
-                    {geoResults.targetFloorAdvisory.targetStatus === 'safe' ? '✓ SAFE & FEASIBLE' : geoResults.targetFloorAdvisory.targetStatus === 'warning' ? '⚠ REQUIRES RAFT' : '✕ DEEP PILING REQUIRED'}
-                  </span>
+              {/* Key Mechanics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase font-mono block">Specific Gravity</span>
+                  <div className="text-lg font-mono font-bold text-slate-900">Gs = {geoState?.gs || 2.70}</div>
+                  <span className="text-[10px] text-slate-600 block">Soil: {texture}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 font-mono text-[11px]">
-                  <div className="bg-white p-3 rounded-xl border border-emerald-200">
-                    <span className="text-[10px] text-slate-500 uppercase font-mono block">Required Load Capacity</span>
-                    <strong className="text-slate-900 font-bold">{geoResults.targetFloorAdvisory.requiredBearingCapacity} kN/m²</strong>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border border-emerald-200">
-                    <span className="text-[10px] text-slate-500 uppercase font-mono block">Recommended Target Footing</span>
-                    <strong className="text-emerald-800 font-bold">
-                      {isTa ? geoResults.targetFloorAdvisory.targetFootingTa : geoResults.targetFloorAdvisory.targetFootingEn}
-                    </strong>
-                  </div>
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase font-mono block">Safe Bearing Cap (q_safe)</span>
+                  <div className="text-lg font-mono font-bold text-emerald-700">{q_safe} <span className="text-xs font-normal text-slate-600">kN/m²</span></div>
+                  <span className="text-[10px] text-slate-600 block">FOS = 3.0</span>
                 </div>
 
-                <p className="text-slate-800 bg-white p-3 rounded-xl border border-emerald-200 leading-relaxed text-[11px]">
-                  <strong className="text-emerald-900 font-bold">{isTa ? 'கட்டமைப்பு வழிகாட்டுதல்:' : 'Structural Advisory:'}</strong>{' '}
-                  {isTa ? geoResults.targetFloorAdvisory.targetAdviceTa : geoResults.targetFloorAdvisory.targetAdviceEn}
+                <div className="bg-slate-900 text-white p-3.5 rounded-2xl border border-slate-900 space-y-1 shadow-md">
+                  <span className="text-[10px] text-slate-300 uppercase font-mono block">Max Safe Floor Limit</span>
+                  <div className="text-xl font-mono font-bold text-emerald-400">{maxFloors} Floors</div>
+                  <span className="text-[10px] text-slate-300 block">G + {Math.max(0, maxFloors - 1)} Structure</span>
+                </div>
+
+                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-1">
+                  <span className="text-[10px] text-slate-500 uppercase font-mono block">Stability Score</span>
+                  <div className="text-lg font-mono font-bold text-slate-900">{stabilityScore} / 100</div>
+                  <span className="text-[10px] text-slate-600 block">Depth: {geoState?.depth || 1.5}m</span>
+                </div>
+
+              </div>
+
+              {/* Foundation Recommendation Box */}
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                  <span className="font-bold text-slate-700">{t('foundationTitle')}:</span>
+                  <strong className="text-emerald-800 font-extrabold text-sm uppercase">{recommendation}</strong>
+                </div>
+                <p className="text-slate-700 leading-relaxed pt-1">
+                  <strong className="text-slate-900">{isTa ? 'பொறியியல் காரணம்:' : 'Engineering Safety Rationale:'}</strong>{' '}
+                  {recommendation}
                 </p>
+                <div className="text-amber-800 bg-amber-50 border border-amber-200 p-2.5 rounded-xl flex items-center gap-2 pt-1 text-[11px]">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-700" />
+                  <span>Settlement Risk: <strong>{settlementRisk}</strong></span>
+                </div>
               </div>
-            )}
 
-          </div>
+              {/* Target Construction Floor & Custom Footing Advisory Box */}
+              {geoResults?.targetFloorAdvisory && (
+                <div className="bg-emerald-50/60 border-2 border-emerald-600/30 rounded-2xl p-5 space-y-3 text-xs">
+                  <div className="flex justify-between items-center border-b border-emerald-200 pb-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-emerald-800" />
+                      <strong className="text-slate-900 font-extrabold uppercase text-xs">
+                        {isTa ? `திட்டமிடப்பட்ட ${geoResults.targetFloorAdvisory.targetFloors} மாடி கட்டிட அடித்தள ஆலோசனை` : `Target Advisory: ${geoResults.targetFloorAdvisory.targetFloors} Floors Construction`}
+                      </strong>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-md font-mono text-[10px] font-extrabold border ${
+                      geoResults.targetFloorAdvisory.targetStatus === 'safe'
+                        ? 'bg-emerald-100 text-emerald-900 border-emerald-400'
+                        : geoResults.targetFloorAdvisory.targetStatus === 'warning'
+                        ? 'bg-amber-100 text-amber-900 border-amber-400'
+                        : 'bg-rose-100 text-rose-900 border-rose-400'
+                    }`}>
+                      {geoResults.targetFloorAdvisory.targetStatus === 'safe' ? '✓ SAFE & FEASIBLE' : geoResults.targetFloorAdvisory.targetStatus === 'warning' ? '⚠ REQUIRES RAFT' : '✕ DEEP PILING REQUIRED'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 font-mono text-[11px]">
+                    <div className="bg-white p-3 rounded-xl border border-emerald-200">
+                      <span className="text-[10px] text-slate-500 uppercase font-mono block">Required Load Capacity</span>
+                      <strong className="text-slate-900 font-bold">{geoResults.targetFloorAdvisory.requiredBearingCapacity} kN/m²</strong>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-emerald-200">
+                      <span className="text-[10px] text-slate-500 uppercase font-mono block">Recommended Target Footing</span>
+                      <strong className="text-emerald-800 font-bold">
+                        {isTa ? geoResults.targetFloorAdvisory.targetFootingTa : geoResults.targetFloorAdvisory.targetFootingEn}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <p className="text-slate-800 bg-white p-3 rounded-xl border border-emerald-200 leading-relaxed text-[11px]">
+                    <strong className="text-emerald-900 font-bold">{isTa ? 'கட்டமைப்பு வழிகாட்டுதல்:' : 'Structural Advisory:'}</strong>{' '}
+                    {isTa ? geoResults.targetFloorAdvisory.targetAdviceTa : geoResults.targetFloorAdvisory.targetAdviceEn}
+                  </p>
+                </div>
+              )}
+
+            </div>
+          )}
 
           {/* SECTION 4: PRECISION AGRONOMY & FERTILIZER DOSAGE SCHEDULE */}
-          <div className="space-y-4 pt-1">
-            <h2 className="text-xs font-extrabold text-slate-900 uppercase tracking-widest border-b-2 border-slate-200 pb-1 flex items-center gap-2">
-              <Sprout className="w-4 h-4 text-emerald-600" />
-              {t('pdfAgriSection')}
-            </h2>
+          {includeAgri && (
+            <div className="space-y-4 pt-1">
+              <h2 className="text-xs font-extrabold text-slate-900 uppercase tracking-widest border-b-2 border-slate-200 pb-1 flex items-center gap-2">
+                <Sprout className="w-4 h-4 text-emerald-600" />
+                {t('pdfAgriSection')}
+              </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              
-              {/* Target Crop & Soil NPK Card */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                <div className="text-[10px] text-slate-500 uppercase font-mono font-bold">Selected Target Crop</div>
-                <strong className="text-base text-slate-900 block font-extrabold">
-                  {isTa ? crop.nameTa : crop.nameEn}
-                </strong>
-                <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-700 font-mono space-y-1">
-                  <div>Soil NPK: N: <strong>{agriState?.nitrogen || 85}</strong> | P: <strong>{agriState?.phosphorus || 30}</strong> | K: <strong>{agriState?.potassium || 45}</strong> (kg/ha)</div>
-                  <div>Crop Target NPK: N: <strong>{crop.targetN}</strong> | P: <strong>{crop.targetP}</strong> | K: <strong>{crop.targetK}</strong> (kg/ha)</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                
+                {/* Target Crop & Soil NPK Card */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                  <div className="text-[10px] text-slate-500 uppercase font-mono font-bold">Selected Target Crop</div>
+                  <strong className="text-base text-slate-900 block font-extrabold">
+                    {isTa ? crop.nameTa : crop.nameEn}
+                  </strong>
+                  <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-700 font-mono space-y-1">
+                    <div>Soil NPK: N: <strong>{agriState?.nitrogen || 85}</strong> | P: <strong>{agriState?.phosphorus || 30}</strong> | K: <strong>{agriState?.potassium || 45}</strong> (kg/ha)</div>
+                    <div>Crop Target NPK: N: <strong>{crop.targetN}</strong> | P: <strong>{crop.targetP}</strong> | K: <strong>{crop.targetK}</strong> (kg/ha)</div>
+                  </div>
                 </div>
+
+                {/* Exact Fertilizer Dosage Table */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                  <div className="text-[10px] text-slate-500 uppercase font-mono font-bold">Required Fertilizer Dosage Schedule (per Hectare)</div>
+                  <div className="grid grid-cols-3 gap-2 font-mono text-center pt-1">
+                    
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                      <span className="block text-[10px] text-slate-600">Urea (46% N)</span>
+                      <strong className="text-emerald-700 text-sm block mt-0.5">{agriResults?.fertilizer?.urea || 0} Bgs</strong>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                      <span className="block text-[10px] text-slate-600">DAP (18% N, 46% P)</span>
+                      <strong className="text-blue-700 text-sm block mt-0.5">{agriResults?.fertilizer?.dap || 0} Bgs</strong>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                      <span className="block text-[10px] text-slate-600">MOP (60% K)</span>
+                      <strong className="text-amber-700 text-sm block mt-0.5">{agriResults?.fertilizer?.mop || 0} Bgs</strong>
+                    </div>
+
+                  </div>
+                </div>
+
               </div>
 
-              {/* Exact Fertilizer Dosage Table */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                <div className="text-[10px] text-slate-500 uppercase font-mono font-bold">Required Fertilizer Dosage Schedule (per Hectare)</div>
-                <div className="grid grid-cols-3 gap-2 font-mono text-center pt-1">
-                  
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="block text-[10px] text-slate-600">Urea (46% N)</span>
-                    <strong className="text-emerald-700 text-sm block mt-0.5">{agriResults?.fertilizer?.urea || 0} Bgs</strong>
-                  </div>
+              {/* Categorized Recommendations Summary */}
+              <div className="grid grid-cols-3 gap-3 text-[11px] font-mono">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <strong className="text-emerald-800 block text-[10px] uppercase font-bold mb-1">Top Crops</strong>
+                  {topCrops.map((item, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span>{isTa ? item.nameTa : item.nameEn}</span>
+                      <strong className="text-emerald-700">{item.suitabilityScore}%</strong>
+                    </div>
+                  ))}
+                </div>
 
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="block text-[10px] text-slate-600">DAP (18% N, 46% P)</span>
-                    <strong className="text-blue-700 text-sm block mt-0.5">{agriResults?.fertilizer?.dap || 0} Bgs</strong>
-                  </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <strong className="text-blue-800 block text-[10px] uppercase font-bold mb-1">Top Vegetables</strong>
+                  {topVegs.map((item, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span>{isTa ? item.nameTa : item.nameEn}</span>
+                      <strong className="text-blue-700">{item.suitabilityScore}%</strong>
+                    </div>
+                  ))}
+                </div>
 
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="block text-[10px] text-slate-600">MOP (60% K)</span>
-                    <strong className="text-amber-700 text-sm block mt-0.5">{agriResults?.fertilizer?.mop || 0} Bgs</strong>
-                  </div>
-
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <strong className="text-purple-800 block text-[10px] uppercase font-bold mb-1">Top Fruits</strong>
+                  {topFruits.map((item, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span>{isTa ? item.nameTa : item.nameEn}</span>
+                      <strong className="text-purple-700">{item.suitabilityScore}%</strong>
+                    </div>
+                  ))}
                 </div>
               </div>
 
             </div>
-
-            {/* Categorized Recommendations Summary */}
-            <div className="grid grid-cols-3 gap-3 text-[11px] font-mono">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <strong className="text-emerald-800 block text-[10px] uppercase font-bold mb-1">Top Crops</strong>
-                {topCrops.map((item, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span>{isTa ? item.nameTa : item.nameEn}</span>
-                    <strong className="text-emerald-700">{item.suitabilityScore}%</strong>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <strong className="text-blue-800 block text-[10px] uppercase font-bold mb-1">Top Vegetables</strong>
-                {topVegs.map((item, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span>{isTa ? item.nameTa : item.nameEn}</span>
-                    <strong className="text-blue-700">{item.suitabilityScore}%</strong>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <strong className="text-purple-800 block text-[10px] uppercase font-bold mb-1">Top Fruits</strong>
-                {topFruits.map((item, idx) => (
-                  <div key={idx} className="flex justify-between">
-                    <span>{isTa ? item.nameTa : item.nameEn}</span>
-                    <strong className="text-purple-700">{item.suitabilityScore}%</strong>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
+          )}
 
           {/* SECTION 5: AI SYNTHETIC RECOMMENDATIONS */}
           <div className="space-y-2 pt-1 border-t border-slate-200">
